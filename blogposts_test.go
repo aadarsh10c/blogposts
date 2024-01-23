@@ -3,6 +3,7 @@ package blogposts_test
 import (
 	"errors"
 	"io/fs"
+	"reflect"
 	"testing"
 	"testing/fstest"
 
@@ -34,10 +35,24 @@ func TestNewBlogPosts(t *testing.T) {
 	})
 	t.Run("Failed test", func(t *testing.T) {
 		fs := subFailFS{}
-		
+
 		_, err := blogposts.NewPostFromFS(fs)
-		if err != nil{
+		if err != nil {
 			t.Fatal(err)
 		}
+	})
+	t.Run("Read title form the post", func(t *testing.T) {
+		fs := fstest.MapFS{
+			"hello world.md":  {Data: []byte("Title: Post 1")},
+			"hello-world2.md": {Data: []byte("Title: post 2")},
+		}
+		posts, _ := blogposts.NewPostFromFS(fs)
+		got := posts[0]
+		want := blogposts.Post{Title: "Post 1"}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Got %+v , wanted %+v", got, want)
+		}
+
 	})
 }
