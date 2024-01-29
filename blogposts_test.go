@@ -50,9 +50,35 @@ func TestNewBlogPosts(t *testing.T) {
 		got := posts[0]
 		want := blogposts.Post{Title: "Post 1"}
 
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Got %+v , wanted %+v", got, want)
-		}
+		assertPosts(got, want, t)
 
 	})
+	t.Run("Read file title and description", func(t *testing.T) {
+		const (
+			firstBody = `Title: Post 1
+Description: Description 1`
+			secondBody = `Title: Post 2
+Description: Description 2`
+		)
+
+		fs := fstest.MapFS{
+			"hello world.md":  {Data: []byte(firstBody)},
+			"hello-world2.md": {Data: []byte(secondBody)},
+		}
+
+		posts, _ := blogposts.NewPostFromFS(fs)
+		got := posts[0]
+
+		assertPosts(got, blogposts.Post{
+			Title:       "Post 1",
+			Description: "Description 1",
+		}, t)
+	})
+}
+
+func assertPosts(got blogposts.Post, want blogposts.Post, t *testing.T) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Got %+v , wanted %+v", got, want)
+	}
 }
